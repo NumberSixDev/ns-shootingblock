@@ -1,39 +1,34 @@
--- Hunting Rifle Shooting
-
-local hasHuntingRifle = false
 local isFreeAiming = false
+
 local function processScope(freeAiming)
-    if not isFreeAiming and freeAiming then
-        isFreeAiming = true
+    if isFreeAiming ~= freeAiming then
+        isFreeAiming = freeAiming
         SendNUIMessage({
-            display = true,
-        })
-    elseif isFreeAiming and not freeAiming then
-        isFreeAiming = false
-        SendNUIMessage({
-            display = false,
+            display = isFreeAiming,
         })
     end
 end
 
 local blockShotActive = false
+
 local function blockShooting()
     if blockShotActive then return end
     blockShotActive = true
     CreateThread(function()
-        while hasHuntingRifle do
+        while true do
             local ply = PlayerId()
             local ped = PlayerPedId()
+            if not HasPedGotWeapon(ped, GetHashKey("WEAPON_SNIPERRIFLE"), false) then
+                blockShotActive = false
+                processScope(false)
+                return
+            end
             local ent = nil
-            local aiming, ent = GetEntityPlayerIsFreeAimingAt(ply)
+            local aiming, aimedEntity = GetEntityPlayerIsFreeAimingAt(ply)
             local freeAiming = IsPlayerFreeAiming(ply)
             processScope(freeAiming)
-            local et = GetEntityType(ent)
-            if not freeAiming
-                or IsPedAPlayer(ent)
-                or et == 2
-                or (et == 1 and IsPedInAnyVehicle(ent))
-            then
+            local entType = GetEntityType(aimedEntity)
+            if not freeAiming or IsPedAPlayer(aimedEntity) or entType == 2 or (entType == 1 and IsPedInAnyVehicle(aimedEntity)) then
                 DisableControlAction(0, 24, true)
                 DisableControlAction(0, 47, true)
                 DisableControlAction(0, 58, true)
@@ -41,21 +36,18 @@ local function blockShooting()
             end
             Wait(0)
         end
-        blockShotActive = false
-        processScope(false)
     end)
 end
 
 CreateThread(function()
-    local huntingRifleHash = `weapon_sniperrifle` -- -646649097
-
     while true do
-        if GetSelectedPedWeapon(PlayerPedId()) == huntingRifleHash then
-            hasHuntingRifle = true
+        if HasPedGotWeapon(PlayerPedId(), GetHashKey("WEAPON_SNIPERRIFLE"), false) then
             blockShooting()
+            Wait(1000)
         else
-            hasHuntingRifle = false
+            blockShotActive = false
+            processScope(false)
+            Wait(500)
         end
-        Wait(1000)
     end
 end)
