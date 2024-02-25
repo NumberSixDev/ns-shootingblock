@@ -8,3 +8,7 @@ ns-shootingblock is a script where if you're holding a sniper rifle and you try 
 - Rename To 'ns-shootingblock'
 - Ensure It In Your Server.Cfg
 - Enjoy! :)
+
+# Notes
+
+- If you come across any bugs open a ticket and let me know in the NS Development discord.
